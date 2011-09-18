@@ -64,8 +64,8 @@ calls to the database with minimal code change.
 
 More in depth benchmarking is needed, but here's sone annecdotal evidence.
 
-Without: 450ms per request
-With: 650ms per request
+Without: 650ms per request
+With: 450ms per request
 
 That's right, this saved me 200ms per request with very minimal code change. 
 
