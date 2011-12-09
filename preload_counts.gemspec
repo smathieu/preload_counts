@@ -22,4 +22,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency "rails", "~> 2.3.12"
   s.add_development_dependency "sqlite3"
   s.add_development_dependency "ruby-debug"
+  s.add_development_dependency "multi_rails"
 end

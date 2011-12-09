@@ -64,14 +64,14 @@ calls to the database with minimal code change.
 
 More in depth benchmarking is needed, but here's sone annecdotal evidence.
 
-Without: 450ms per request
-With: 650ms per request
+Without: 650ms per request
+With: 450ms per request
 
 That's right, this saved me 200ms per request with very minimal code change. 
 
 == Support
 
-For now this only support rails 2.3. Rails 3 support comming at some point, pull requests welcome.
+This has been tested on Rails 2.3.12 and Rails 3.1.0
 
 == Help
 
