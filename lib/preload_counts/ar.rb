@@ -53,19 +53,24 @@ module PreloadCounts
 
     def scope_to_select(association, scope)
       resolved_association = association.to_s.singularize.camelize.constantize
-      scope_sql = if scope
-                    resolved_association.scopes[scope].call(resolved_association).send(:construct_finder_sql, {})
-                  else
-                    "1 = 1"
-                  end
+      conditions = []
+
+      if scope
+        scope_sql = resolved_association.scopes[scope].call(resolved_association).send(:construct_finder_sql, {})
+        condition = scope_sql.gsub(/^.*WHERE/, '')
+        conditions << condition
+      end
+
+      association_condition = self.reflections[association].options[:conditions]
+      conditions << association_condition if association_condition
+
       # FIXME This is a really hacking way of getting the named_scope condition.
       # In Rails 3 we would have AREL to get to it. 
-      condition = scope_sql.gsub(/^.*WHERE/, '')
       sql = <<-SQL
       (SELECT count(*) 
        FROM #{association} 
-       WHERE #{association}.#{to_s.underscore}_id = #{table_name}.id AND 
-       #{condition}) as #{find_accessor_name(association, scope)} 
+       WHERE #{association}.#{table_name.singularize}_id = #{table_name}.id AND 
+       #{conditions_to_sql conditions}) as #{find_accessor_name(association, scope)} 
       SQL
     end
 
@@ -73,6 +78,11 @@ module PreloadCounts
       accessor_name = "#{association}_count"
       accessor_name = "#{scope}_" + accessor_name if scope
       accessor_name
+    end
+
+    def conditions_to_sql(conditions)
+      conditions = ["1 = 1"] if conditions.empty?
+      conditions.join(" AND ")
     end
   end
 

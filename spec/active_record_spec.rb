@@ -8,7 +8,8 @@ def setup_db
     end
 
     create_table :comments do |t|
-      t.integer :post_id, :nulll => false 
+      t.integer :post_id, :null => false 
+      t.datetime :deleted_at
     end
   end
 end
@@ -17,7 +18,16 @@ setup_db
 
 class Post < ActiveRecord::Base
   has_many :comments
+  has_many :active_comments, :conditions => "deleted_at IS NULL", :class_name => 'Comment'
   preload_counts :comments => [:with_even_id]
+  preload_counts :active_comments
+end
+
+class PostWithActiveComments < ActiveRecord::Base
+  set_table_name :posts
+
+  has_many :comments, :conditions => "deleted_at IS NULL"
+  preload_counts :comments
 end
 
 class Comment < ActiveRecord::Base
@@ -28,7 +38,8 @@ end
 
 def create_data
   post = Post.create 
-  10.times { post.comments.create }
+  5.times { post.comments.create }
+  5.times { post.comments.create :deleted_at => Time.now }
 end
 
 create_data
@@ -48,6 +59,10 @@ describe Post do
     it "should be able to get count without preloading them" do
       post.comments_count.should equal(10)
     end
+
+    it "should have an active_comments_count accessor" do
+      post.should respond_to(:comments_count) 
+    end
   end
 
   describe 'instance with preloaded count' do
@@ -63,3 +78,12 @@ describe Post do
   end
 end
 
+describe PostWithActiveComments do
+  describe 'instance with preloaded count' do
+    let(:post) { PostWithActiveComments.preload_comment_counts.first } 
+
+    it "should be able to get the association count" do
+      post.comments_count.should equal(5)
+    end
+  end
+end
