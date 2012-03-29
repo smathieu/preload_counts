@@ -56,7 +56,7 @@ module PreloadCounts
       conditions = []
 
       if scope
-        scope_sql = resolved_association.scopes[scope].call(resolved_association).send(:construct_finder_sql, {})
+        scope_sql = resolved_association.send(scope).to_sql
         condition = scope_sql.gsub(/^.*WHERE/, '')
         conditions << condition
       end

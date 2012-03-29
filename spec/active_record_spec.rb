@@ -1,6 +1,8 @@
 require 'spec_helper'
+require 'logger'
 
-ActiveRecord::Base.establish_connection(:adapter => "sqlite3", :dbfile => ":memory:")
+ActiveRecord::Base.establish_connection(:adapter => "sqlite3", :database => ":memory:")
+ActiveRecord::Base.logger = Logger.new(nil)
 
 def setup_db
   ActiveRecord::Schema.define(:version => 1) do
@@ -33,7 +35,7 @@ end
 class Comment < ActiveRecord::Base
   belongs_to :post
 
-  named_scope :with_even_id, lambda { {:conditions => "comments.id % 2 == 0"} }
+  scope :with_even_id, where('id % 2 = 0')
 end
 
 def create_data
@@ -72,7 +74,7 @@ describe Post do
       post.comments_count.should equal(10)
     end
 
-    it "should be able to get the association count with a named scope" do
+    it "should be able to get the association count with a scope" do
       post.with_even_id_comments_count.should equal(5)
     end
   end
