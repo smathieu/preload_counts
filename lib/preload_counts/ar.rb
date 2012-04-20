@@ -56,7 +56,11 @@ module PreloadCounts
       conditions = []
 
       if scope
-        scope_sql = resolved_association.send(scope).to_sql
+        if ActiveRecord::VERSION::MAJOR < 3
+          scope_sql = resolved_association.scopes[scope].call(resolved_association).send(:construct_finder_sql, {})
+        else
+          scope_sql = resolved_association.send(scope).to_sql
+        end
         condition = scope_sql.gsub(/^.*WHERE/, '')
         conditions << condition
       end
