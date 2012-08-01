@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.version     = PreloadCounts::VERSION
   s.authors     = ["Simon Mathieu"]
   s.email       = ["simon.math@gmail.com"]
-  s.homepage    = ""
+  s.homepage    = "https://github.com/smathieu/preload_counts"
   s.summary     = %q{Preload association or scope counts.}
   s.description = %q{Preload association or scope counts. This can greatly reduce the number of queries you have to perform and thus yield great performance gains.}
 
