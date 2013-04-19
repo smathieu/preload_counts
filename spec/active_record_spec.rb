@@ -11,6 +11,7 @@ end
 def setup_db
   ActiveRecord::Schema.define(:version => 1) do
     create_table :posts do |t|
+      t.integer :parent_id
     end
 
     create_table :comments do |t|
@@ -27,19 +28,25 @@ end
 setup_db
 
 class Post < ActiveRecord::Base
+  has_many :children, :class_name => 'Post', :foreign_key => 'parent_id'
+
   has_many :comments
-  has_many :active_comments, :conditions => "deleted_at IS NULL", :class_name => 'Comment'
-  preload_counts :comments => [:with_even_id]
-  preload_counts :active_comments
+  has_many :active_comments, :conditions => "deleted_at IS NULL",
+    :class_name => 'Comment'
 
   has_many :moduled_other_comments, :class_name => 'Moduled::OtherComment'
+
+  preload_counts :children
+  preload_counts :comments => [:with_even_id]
+  preload_counts :active_comments
   preload_counts :moduled_other_comments
 end
 
 class PostWithActiveComments < ActiveRecord::Base
   set_table_name :posts
 
-  has_many :comments, :conditions => "deleted_at IS NULL"
+  has_many :comments, :conditions => "deleted_at IS NULL",
+    :foreign_key => 'post_id'
   preload_counts :comments
 end
 
@@ -62,6 +69,7 @@ end
 
 def create_data
   post = Post.create
+  3.times { post.children.create }
   5.times { post.comments.create }
   5.times { post.comments.create :deleted_at => Time.now }
 
@@ -112,6 +120,14 @@ describe Post do
 
     it "should be able to get the moduled association count" do
       post.moduled_other_comments_count.should equal(2)
+    end
+  end
+
+  describe 'instance with preloaded self-referential count' do
+    let(:post) { Post.preload_child_counts.first }
+
+    it "should be able to get the self-referential association count" do
+      post.children_count.should equal(3)
     end
   end
 end

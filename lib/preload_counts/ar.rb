@@ -71,16 +71,26 @@ module PreloadCounts
       association_condition = self.reflections[association].options[:conditions]
       conditions << association_condition if association_condition
 
-      join_column = "#{association_table_name}.#{table_name.singularize}_id"
+      foreign_key = association_reflection.foreign_key
+
+      # Get a unique table alias, which we need for preloading counts of a
+      # self-referential relationship
+      @count ||= 0
+      association_table_alias = "#{association_table_name}_#{@count}"
+
+      join_column = "#{association_table_alias}.#{foreign_key}"
 
       # FIXME This is a really hacking way of getting the named_scope condition.
       # In Rails 3 we would have AREL to get to it.
       sql = <<-SQL
       (SELECT count(*)
-       FROM #{association_table_name}
+       FROM #{association_table_name} AS #{association_table_alias}
        WHERE #{join_column} = #{table_name}.id AND
        #{conditions_to_sql conditions}) as #{find_accessor_name(association, scope)}
       SQL
+
+      @count += 1
+      sql
     end
 
     def find_accessor_name(association, scope)
