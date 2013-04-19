@@ -14,19 +14,26 @@ def setup_db
     end
 
     create_table :comments do |t|
-      t.integer :post_id, :null => false 
+      t.integer :post_id, :null => false
       t.datetime :deleted_at
+    end
+
+    create_table :moduled_other_comments do |t|
+      t.integer :post_id, :null => false
     end
   end
 end
 
-setup_db 
+setup_db
 
 class Post < ActiveRecord::Base
   has_many :comments
   has_many :active_comments, :conditions => "deleted_at IS NULL", :class_name => 'Comment'
   preload_counts :comments => [:with_even_id]
   preload_counts :active_comments
+
+  has_many :moduled_other_comments, :class_name => 'Moduled::OtherComment'
+  preload_counts :moduled_other_comments
 end
 
 class PostWithActiveComments < ActiveRecord::Base
@@ -46,24 +53,37 @@ class Comment < ActiveRecord::Base
   end
 end
 
+module Moduled
+end
+class Moduled::OtherComment < ActiveRecord::Base
+  set_table_name 'moduled_other_comments'
+  belongs_to :post
+end
+
 def create_data
-  post = Post.create 
+  post = Post.create
   5.times { post.comments.create }
   5.times { post.comments.create :deleted_at => Time.now }
+
+  2.times { post.moduled_other_comments.create }
 end
 
 create_data
 
 describe Post do
   it "should have a preload_comment_counts scope" do
-    Post.should respond_to(:preload_comment_counts) 
+    Post.should respond_to(:preload_comment_counts)
+  end
+
+  it "should have a preload_moduled_comment_counts scope" do
+    Post.should respond_to(:preload_moduled_other_comment_counts)
   end
 
   describe 'instance' do
-    let(:post) { Post.first } 
+    let(:post) { Post.first }
 
     it "should have a comment_count accessor" do
-      post.should respond_to(:comments_count) 
+      post.should respond_to(:comments_count)
     end
 
     it "should be able to get count without preloading them" do
@@ -71,12 +91,12 @@ describe Post do
     end
 
     it "should have an active_comments_count accessor" do
-      post.should respond_to(:comments_count) 
+      post.should respond_to(:comments_count)
     end
   end
 
   describe 'instance with preloaded count' do
-    let(:post) { Post.preload_comment_counts.first } 
+    let(:post) { Post.preload_comment_counts.first }
 
     it "should be able to get the association count" do
       post.comments_count.should equal(10)
@@ -86,11 +106,19 @@ describe Post do
       post.with_even_id_comments_count.should equal(5)
     end
   end
+
+  describe 'instance with preloaded moduled comment count' do
+    let(:post) { Post.preload_moduled_other_comment_counts.first }
+
+    it "should be able to get the moduled association count" do
+      post.moduled_other_comments_count.should equal(2)
+    end
+  end
 end
 
 describe PostWithActiveComments do
   describe 'instance with preloaded count' do
-    let(:post) { PostWithActiveComments.preload_comment_counts.first } 
+    let(:post) { PostWithActiveComments.preload_comment_counts.first }
 
     it "should be able to get the association count" do
       post.comments_count.should equal(5)
