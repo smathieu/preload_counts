@@ -1,5 +1,4 @@
 require "bundler/gem_tasks"
-require "load_multi_rails_rake_tasks"
 
 require 'rspec/core/rake_task'
 
