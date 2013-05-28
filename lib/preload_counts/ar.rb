@@ -26,7 +26,7 @@ module PreloadCounts
         name = "preload_#{association.to_s.singularize}_counts"
         singleton = class << self; self end
         singleton.send :define_method, name do
-          sql = ['*'] + scopes_to_select(association, scopes)
+          sql = ["#{table_name}.*"] + scopes_to_select(association, scopes)
           sql = sql.join(', ')
           scoped(:select => sql)
         end
