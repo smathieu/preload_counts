@@ -1,9 +1,9 @@
-# This adds a scope to preload the counts of an association in one SQL query. 
+# This adds a scope to preload the counts of an association in one SQL query.
 #
 # Consider the following code:
 # Service.all.each{|s| puts s.incidents.acknowledged.count}
 #
-# Each time count is called, a db query is made to fetch the count. 
+# Each time count is called, a db query is made to fetch the count.
 #
 # Adding this to the Service class:
 #
@@ -43,7 +43,7 @@ module PreloadCounts
 
       end
     end
-    
+
     private
     def scopes_to_select(association, scopes)
       scopes.map do |scope|
@@ -52,7 +52,10 @@ module PreloadCounts
     end
 
     def scope_to_select(association, scope)
-      resolved_association = association.to_s.singularize.camelize.constantize
+      association_reflection = reflect_on_association(association)
+      resolved_association = association_reflection.class_name.constantize
+      association_table_name = association_reflection.table_name
+
       conditions = []
 
       if scope
@@ -68,14 +71,26 @@ module PreloadCounts
       association_condition = self.reflections[association].options[:conditions]
       conditions << association_condition if association_condition
 
+      foreign_key = association_reflection.foreign_key
+
+      # Get a unique table alias, which we need for preloading counts of a
+      # self-referential relationship
+      @count ||= 0
+      association_table_alias = "#{association_table_name}_#{@count}"
+
+      join_column = "#{association_table_alias}.#{foreign_key}"
+
       # FIXME This is a really hacking way of getting the named_scope condition.
-      # In Rails 3 we would have AREL to get to it. 
+      # In Rails 3 we would have AREL to get to it.
       sql = <<-SQL
-      (SELECT count(*) 
-       FROM #{association} 
-       WHERE #{association}.#{table_name.singularize}_id = #{table_name}.id AND 
-       #{conditions_to_sql conditions}) as #{find_accessor_name(association, scope)} 
+      (SELECT count(*)
+       FROM #{association_table_name} AS #{association_table_alias}
+       WHERE #{join_column} = #{table_name}.id AND
+       #{conditions_to_sql conditions}) as #{find_accessor_name(association, scope)}
       SQL
+
+      @count += 1
+      sql
     end
 
     def find_accessor_name(association, scope)
@@ -100,4 +115,3 @@ module PreloadCounts
 end
 
 ActiveRecord::Base.class_eval { include PreloadCounts }
-
