@@ -1,9 +1,9 @@
-# This adds a scope to preload the counts of an association in one SQL query. 
+# This adds a scope to preload the counts of an association in one SQL query.
 #
 # Consider the following code:
 # Service.all.each{|s| puts s.incidents.acknowledged.count}
 #
-# Each time count is called, a db query is made to fetch the count. 
+# Each time count is called, a db query is made to fetch the count.
 #
 # Adding this to the Service class:
 #
@@ -28,7 +28,7 @@ module PreloadCounts
         singleton.send :define_method, name do
           sql = ["#{table_name}.*"] + scopes_to_select(association, scopes)
           sql = sql.join(', ')
-          scoped(:select => sql)
+          all.select(sql)
         end
 
         scopes.each do |scope|
@@ -43,7 +43,7 @@ module PreloadCounts
 
       end
     end
-    
+
     private
     def scopes_to_select(association, scopes)
       scopes.map do |scope|
@@ -56,25 +56,22 @@ module PreloadCounts
       conditions = []
 
       if scope
-        if ActiveRecord::VERSION::MAJOR < 3
-          scope_sql = resolved_association.scopes[scope].call(resolved_association).send(:construct_finder_sql, {})
-        else
-          scope_sql = resolved_association.send(scope).to_sql
-        end
+        scope_sql = resolved_association.send(scope).to_sql
         condition = scope_sql.gsub(/^.*WHERE/, '')
         conditions << condition
       end
 
       association_condition = self.reflections[association].options[:conditions]
+      binding.pry
       conditions << association_condition if association_condition
 
       # FIXME This is a really hacking way of getting the named_scope condition.
-      # In Rails 3 we would have AREL to get to it. 
+      # In Rails 3 we would have AREL to get to it.
       sql = <<-SQL
-      (SELECT count(*) 
-       FROM #{association} 
-       WHERE #{association}.#{table_name.singularize}_id = #{table_name}.id AND 
-       #{conditions_to_sql conditions}) as #{find_accessor_name(association, scope)} 
+      (SELECT count(*)
+       FROM #{association}
+       WHERE #{association}.#{table_name.singularize}_id = #{table_name}.id AND
+       #{conditions_to_sql conditions}) as #{find_accessor_name(association, scope)}
       SQL
     end
 
