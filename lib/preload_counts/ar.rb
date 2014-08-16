@@ -61,21 +61,21 @@ module PreloadCounts
         conditions << condition
       end
 
-      association_condition = self.reflections[association].options[:conditions]
-      binding.pry
-      conditions << association_condition if association_condition
+      r_scope = self.reflections[association].scope
+      if r_scope
+        conditions += self.instance_eval(&r_scope).where_values
+      end
 
-      # FIXME This is a really hacking way of getting the named_scope condition.
-      # In Rails 3 we would have AREL to get to it.
       sql = <<-SQL
       (SELECT count(*)
        FROM #{association}
        WHERE #{association}.#{table_name.singularize}_id = #{table_name}.id AND
-       #{conditions_to_sql conditions}) as #{find_accessor_name(association, scope)}
+       #{conditions_to_sql conditions}) AS #{find_accessor_name(association, scope)}
       SQL
     end
 
     def find_accessor_name(association, scope)
+      ap scope
       accessor_name = "#{association}_count"
       accessor_name = "#{scope}_" + accessor_name if scope
       accessor_name

@@ -4,3 +4,4 @@ source "http://rubygems.org"
 gemspec
 
 gem "pry"
+gem "awesome_print"
