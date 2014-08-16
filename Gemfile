@@ -18,3 +18,4 @@ end
 gem "activerecord", activerecord_version
 gem "pry"
 gem "awesome_print"
+gem "rake"
