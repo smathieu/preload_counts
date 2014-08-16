@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/smathieu/preload_counts.png?branch=master)](https://travis-ci.org/smathieu/preload_counts)
+
 # Preload Counts
 
 Did you ever write an index page that only needs the count of an association? Consider the following example: 
