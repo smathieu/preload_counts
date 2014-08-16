@@ -35,8 +35,8 @@ module PreloadCounts
           # Define accessor for each count
           accessor_name = find_accessor_name(association, scope)
           define_method accessor_name do
-            result = send(association)
-            result = result.send(scope) if scope
+            result = public_send(association)
+            result = result.public_send(scope) if scope
             (self[accessor_name] || result.size).to_i
           end
         end
@@ -75,7 +75,6 @@ module PreloadCounts
     end
 
     def find_accessor_name(association, scope)
-      ap scope
       accessor_name = "#{association}_count"
       accessor_name = "#{scope}_" + accessor_name if scope
       accessor_name

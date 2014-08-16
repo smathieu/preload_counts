@@ -1,12 +1,10 @@
 require 'spec_helper'
 require 'logger'
 
-if ActiveRecord::VERSION::MAJOR < 3
-  ActiveRecord::Base.establish_connection(:adapter => "sqlite3", :dbfile => ":memory:")
-else
-  ActiveRecord::Base.establish_connection(:adapter => "sqlite3", :database => ":memory:")
-  ActiveRecord::Base.logger = Logger.new(nil)
-end
+puts "Using ActiveRecord #{ActiveRecord::VERSION::STRING}"
+
+ActiveRecord::Base.establish_connection(:adapter => "sqlite3", :database => ":memory:")
+ActiveRecord::Base.logger = Logger.new(nil)
 
 def setup_db
   ActiveRecord::Schema.define(:version => 1) do
