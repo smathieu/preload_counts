@@ -1,0 +1,13 @@
+env:
+  - "ACTIVERECORD_VERSION=4.1"
+  - "ACTIVERECORD_VERSION=4.0"
+  - "ACTIVERECORD_VERSION=master"
+
+rvm:
+  - 1.9.3
+  - 2.0.0
+  - 2.1.2
+  - ruby-head
+  - jruby-19mode
+  - rbx
+
