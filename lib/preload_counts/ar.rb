@@ -61,7 +61,7 @@ module PreloadCounts
         conditions << condition
       end
 
-      r_scope = self.reflections[association].scope
+      r_scope = self.reflections.with_indifferent_access[association].scope
       if r_scope
         conditions += self.instance_eval(&r_scope).where_values
       end
