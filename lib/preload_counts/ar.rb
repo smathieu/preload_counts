@@ -22,7 +22,7 @@ module PreloadCounts
       options.each do |association, scopes|
         scopes = scopes + [nil]
 
-        # Define singleton metho to load all counts
+        # Define singleton method to load all counts
         name = "preload_#{association.to_s.singularize}_counts"
         singleton = class << self; self end
         singleton.send :define_method, name do
