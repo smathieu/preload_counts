@@ -63,7 +63,15 @@ module PreloadCounts
 
       r_scope = self.reflections.with_indifferent_access[association].scope
       if r_scope
-        conditions += self.instance_eval(&r_scope).where_values
+        where_values = self.instance_eval(&r_scope).where_values
+        where_values.each do |where_value|
+          if where_value.respond_to? :to_sql
+            sql_value = where_value.to_sql
+            conditions << sql_value unless sql_value.include?('$1') # ignoring parameterized clauses
+          else
+            conditions << where_value
+          end
+        end
       end
 
       sql = <<-SQL
@@ -96,4 +104,3 @@ module PreloadCounts
 end
 
 ActiveRecord::Base.class_eval { include PreloadCounts }
-
